@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { DrinkRecord } from '../types';
-import { X, Check, Clock, Zap } from 'lucide-react';
+import { X, Check, Clock, Zap, ChevronRight } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -16,6 +16,8 @@ const CUP_PRESETS = [
 ];
 
 const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  
   const getNowLocalISO = () => {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
@@ -52,8 +54,24 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
     }
   };
 
-  const setTimeToNow = () => {
+  const setTimeToNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setFormData(prev => ({ ...prev, date: getNowLocalISO() }));
+  };
+
+  const handleTimeClick = () => {
+    // 现代浏览器支持 showPicker 显式唤起
+    if (dateInputRef.current) {
+      if ('showPicker' in HTMLInputElement.prototype) {
+        try {
+          dateInputRef.current.showPicker();
+        } catch (e) {
+          dateInputRef.current.focus();
+        }
+      } else {
+        dateInputRef.current.focus();
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -81,36 +99,33 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-[2px] overflow-hidden">
-      {/* Backdrop for closing */}
       <div className="absolute inset-0" onClick={onClose} />
       
-      {/* Bottom Sheet Modal */}
       <div className="bg-white w-full max-w-xl rounded-t-[2.5rem] shadow-2xl relative animate-in slide-in-from-bottom-full duration-300 ease-out max-h-[92vh] flex flex-col pb-[env(safe-area-inset-bottom)]">
-        {/* Handle for the bottom sheet feel */}
         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-2 shrink-0" />
         
         <div className="flex justify-between items-center px-8 py-2 shrink-0">
-          <h2 className="text-xl font-bold text-gray-800">记一杯</h2>
-          <button onClick={onClose} className="p-2 bg-gray-100 rounded-full active:bg-gray-200">
-            <X size={20} />
+          <h2 className="text-xl font-bold text-gray-800 tracking-tight">记一杯</h2>
+          <button onClick={onClose} className="p-2 bg-gray-100 rounded-full active:scale-90 transition-transform">
+            <X size={20} className="text-gray-400" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 pb-8 pt-2 space-y-6">
-          {/* Form Content */}
-          <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-8 pb-8 pt-2 space-y-7">
+          <div className="space-y-7">
+            {/* 杯型选择 */}
             <section>
-              <label className="block text-[10px] font-black text-gray-400 mb-3 uppercase tracking-[0.15em]">杯型预设</label>
+              <label className="block text-[11px] font-black text-gray-400 mb-3 uppercase tracking-widest">选择杯型</label>
               <div className="grid grid-cols-4 gap-2">
                 {CUP_PRESETS.map(preset => (
                   <button
                     key={preset.label}
                     type="button"
                     onClick={() => handleCupSizeSelect(preset)}
-                    className={`py-3 rounded-2xl text-xs font-bold transition-all ${
+                    className={`py-3.5 rounded-2xl text-[13px] font-black transition-all ${
                       formData.cupSize === preset.label 
-                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' 
-                      : 'bg-gray-50 text-gray-500 active:bg-gray-100'
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 scale-[1.02]' 
+                      : 'bg-gray-50 text-gray-400 active:bg-gray-100'
                     }`}
                   >
                     {preset.label}
@@ -119,18 +134,19 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
               </div>
             </section>
 
+            {/* 名称和品牌 */}
             <div className="grid grid-cols-2 gap-4">
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">饮品名称</label>
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">饮品名称</label>
                 <input required type="text" placeholder="多肉葡萄"
-                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-200 text-sm font-medium"
+                  className="w-full h-14 px-5 bg-gray-50 border-2 border-transparent focus:border-orange-100 focus:bg-white rounded-2xl text-sm font-bold transition-all outline-none"
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
                 />
               </section>
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">品牌</label>
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">品牌</label>
                 <input required type="text" placeholder="喜茶"
-                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-200 text-sm font-medium"
+                  className="w-full h-14 px-5 bg-gray-50 border-2 border-transparent focus:border-orange-100 focus:bg-white rounded-2xl text-sm font-bold transition-all outline-none"
                   value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})}
                 />
               </section>
@@ -138,23 +154,23 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
             
             <div className="grid grid-cols-3 gap-3">
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">价格 (¥)</label>
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">单价 (¥)</label>
                 <input required type="number" step="0.01"
-                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-200 text-sm font-medium"
+                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-200 outline-none"
                   value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})}
                 />
               </section>
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">容量 (ml)</label>
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">容量 (ml)</label>
                 <input type="number"
-                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-200 text-sm font-medium"
+                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-200 outline-none"
                   value={formData.volume} onChange={e => setFormData({...formData, volume: e.target.value})}
                 />
               </section>
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">热量 (kcal)</label>
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">热量 (kcal)</label>
                 <input type="number"
-                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-orange-200 text-sm font-medium"
+                  className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-200 outline-none"
                   value={formData.calories} onChange={e => setFormData({...formData, calories: e.target.value})}
                 />
               </section>
@@ -162,8 +178,8 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">甜度</label>
-                <select className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm font-medium appearance-none"
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">甜度</label>
+                <select className="w-full h-14 px-5 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none"
                   value={formData.sugarLevel} onChange={e => setFormData({...formData, sugarLevel: e.target.value})}
                 >
                   <option value="不加糖">不加糖</option>
@@ -174,8 +190,8 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
                 </select>
               </section>
               <section>
-                <label className="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">冰量</label>
-                <select className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm font-medium appearance-none"
+                <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">冰量</label>
+                <select className="w-full h-14 px-5 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none"
                   value={formData.iceLevel} onChange={e => setFormData({...formData, iceLevel: e.target.value})}
                 >
                   <option value="去冰">去冰</option>
@@ -187,21 +203,42 @@ const AddDrinkModal: React.FC<Props> = ({ onClose, onSubmit }) => {
               </section>
             </div>
 
-            <section>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">饮用时间</label>
-                <button type="button" onClick={setTimeToNow} className="text-[10px] font-black text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full active:bg-orange-100">
-                  <Zap size={10} className="inline mr-1" /> 设为现在
+            {/* 饮用时间：点击自动唤起选择器 */}
+            <section className="relative">
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">饮用时间</label>
+                <button 
+                  type="button" 
+                  onClick={setTimeToNow} 
+                  className="text-[10px] font-black text-orange-600 bg-orange-100/50 px-3 py-1.5 rounded-full active:scale-95 transition-all flex items-center gap-1"
+                >
+                  <Zap size={10} className="fill-orange-500 text-orange-500" /> 设为现在
                 </button>
               </div>
-              <input type="datetime-local" className="w-full h-14 px-4 bg-gray-50 border-none rounded-2xl text-sm"
-                value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})}
-              />
+              
+              <div 
+                onClick={handleTimeClick}
+                className="relative group cursor-pointer active:scale-[0.99] transition-transform"
+              >
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none z-10">
+                  <Clock size={20} />
+                </div>
+                <input 
+                  ref={dateInputRef}
+                  type="datetime-local" 
+                  className="w-full h-16 pl-14 pr-12 bg-gray-50 border-2 border-transparent group-hover:bg-gray-100 focus:border-orange-100 focus:bg-white rounded-[1.8rem] text-sm font-black transition-all outline-none text-gray-700 relative z-20 cursor-pointer"
+                  value={formData.date} 
+                  onChange={e => setFormData({...formData, date: e.target.value})}
+                />
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none z-10">
+                  <ChevronRight size={20} />
+                </div>
+              </div>
             </section>
           </div>
 
           <button type="submit"
-            className="w-full h-16 bg-orange-500 text-white rounded-2xl font-black text-lg shadow-xl shadow-orange-100 flex items-center justify-center gap-2 active:scale-[0.97] active:bg-orange-600 transition-all"
+            className="w-full h-16 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-orange-100 flex items-center justify-center gap-2 active:scale-[0.97] transition-all mt-4 mb-2"
           >
             <Check size={24} strokeWidth={3} />
             完成记录

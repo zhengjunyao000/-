@@ -16,13 +16,16 @@ const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
 
   const filteredStats = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    // 使用 en-CA 获取本地 YYYY-MM-DD 格式，避免 UTC 偏差
+    const todayStr = now.toLocaleDateString('en-CA');
+    
     const getStartOfWeek = (d: Date) => {
       const date = new Date(d);
       const day = date.getDay();
       const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(date.setDate(diff)).toISOString().split('T')[0];
+      return new Date(date.setDate(diff)).toLocaleDateString('en-CA');
     };
+    
     const startOfWeek = getStartOfWeek(now);
     const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
     const startOfYear = `${now.getFullYear()}-01-01`;
@@ -47,10 +50,10 @@ const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = d.toLocaleDateString('en-CA');
       const dailyRecords = records.filter(r => r.date.startsWith(dateStr));
       return {
-        date: dateStr.split('-').slice(2).join('/'),
+        date: dateStr.split('-').slice(1).join('/'),
         count: dailyRecords.length,
         spent: dailyRecords.reduce((sum, r) => sum + r.price, 0)
       };
@@ -93,7 +96,7 @@ const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
           <HighlightCard 
             label={timeRange === 'day' ? '今日消费' : '累计消费'} 
             value={`¥${filteredStats.spent.toFixed(2)}`} 
-            subValue={filteredStats.count > 0 ? `平均每杯 ¥${(filteredStats.spent / filteredStats.count).toFixed(1)}` : '期待第一杯'}
+            subValue={filteredStats.count > 0 ? `平均每杯 ¥${(filteredStats.spent / filteredStats.count).toFixed(1)}` : (timeRange === 'day' ? '今天还没喝呢' : '期待第一杯')}
             icon={<Wallet size={20} />}
             gradient="from-orange-500 to-orange-600"
           />
@@ -208,7 +211,7 @@ const HighlightCard: React.FC<{ label: string, value: string, subValue: string, 
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">{label}</p>
-        <h3 className="text-2xl font-black tracking-tight">{value}</h3>
+        <h3 className="text-2xl font-black tracking-tight leading-none mb-1">{value}</h3>
         <p className="text-[9px] font-bold opacity-60 mt-1.5 flex items-center gap-1">
           <ChevronRight size={8} /> {subValue}
         </p>

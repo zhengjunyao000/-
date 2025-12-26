@@ -1,5 +1,5 @@
 {
-  "name": "BubbleTea Tracker - 奶茶足迹",
-  "description": "一个优雅的奶茶饮用记录与分析工具，帮助你追踪饮品消耗、支出情况，并提供AI健康建议。",
+  "name": "BubbleTea Tracker - 记一杯",
+  "description": "记一杯，生活有点甜。一个优雅的奶茶饮用记录与分析工具，帮助你追踪饮品消耗、支出情况，并提供AI健康建议。",
   "requestFramePermissions": []
 }
