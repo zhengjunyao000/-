@@ -12,13 +12,18 @@ interface Props {
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
+  // 当前选择的时间维度
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
 
+  /**
+   * 根据选定的时间范围计算过滤后的统计数据
+   */
   const filteredStats = useMemo(() => {
     const now = new Date();
-    // 使用 en-CA 获取本地 YYYY-MM-DD 格式，避免 UTC 偏差
+    // 使用 en-CA (YYYY-MM-DD) 格式化当前日期，解决时区导致的日期不一致问题
     const todayStr = now.toLocaleDateString('en-CA');
     
+    // 获取本周周一的日期
     const getStartOfWeek = (d: Date) => {
       const date = new Date(d);
       const day = date.getDay();
@@ -46,6 +51,9 @@ const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
     };
   }, [records, timeRange]);
 
+  /**
+   * 生成过去 7 天的趋势数据
+   */
   const last7Days = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date();
@@ -53,13 +61,16 @@ const Dashboard: React.FC<Props> = ({ stats: initialStats, records }) => {
       const dateStr = d.toLocaleDateString('en-CA');
       const dailyRecords = records.filter(r => r.date.startsWith(dateStr));
       return {
-        date: dateStr.split('-').slice(1).join('/'),
+        date: dateStr.split('-').slice(1).join('/'), // 格式化为 MM/DD
         count: dailyRecords.length,
         spent: dailyRecords.reduce((sum, r) => sum + r.price, 0)
       };
-    }).reverse();
+    }).reverse(); // 倒序变为正序排列
   }, [records]);
 
+  /**
+   * 计算常喝饮品排行榜
+   */
   const frequentDrinks = useMemo(() => {
     return Object.entries(
       records.reduce((acc, r) => {

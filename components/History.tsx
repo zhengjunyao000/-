@@ -20,23 +20,33 @@ const History: React.FC<Props> = ({ records, onDelete }) => {
   const getStartOfWeek = (date: Date) => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
+  };
+
+  /**
+   * 解析存储的时间字符串
+   */
+  const parseDate = (dateStr: string) => {
+    // 确保格式符合 new Date() 解析要求
+    return new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T'));
   };
 
   const filteredRecordsByTime = useMemo(() => {
     return records.filter(record => {
-      const recordDate = new Date(record.date);
+      const recordDate = parseDate(record.date);
       if (view === 'day') {
         return recordDate.toDateString() === currentDate.toDateString();
       } else if (view === 'week') {
         const startOfWeek = getStartOfWeek(currentDate);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
+        
         recordDate.setHours(0,0,0,0);
-        startOfWeek.setHours(0,0,0,0);
-        endOfWeek.setHours(23,59,59,999);
-        return recordDate >= startOfWeek && recordDate <= endOfWeek;
+        const start = new Date(startOfWeek); start.setHours(0,0,0,0);
+        const end = new Date(endOfWeek); end.setHours(23,59,59,999);
+        
+        return recordDate >= start && recordDate <= end;
       } else if (view === 'month') {
         return recordDate.getMonth() === currentDate.getMonth() && recordDate.getFullYear() === currentDate.getFullYear();
       }
@@ -74,15 +84,12 @@ const History: React.FC<Props> = ({ records, onDelete }) => {
     }
   };
 
-  const formatRecordDate = (dateStr: string) => {
-    // 假设 dateStr 是 YYYY-MM-DDTHH:mm 格式
-    const [date, time] = dateStr.includes('T') ? dateStr.split('T') : [dateStr, ''];
-    return time ? `${date} ${time}` : date;
+  const formatRecordTime = (dateStr: string) => {
+    return dateStr.replace('T', ' ').split('.')[0];
   };
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      {/* View Switcher and Navigation */}
       <div className="bg-white p-4 rounded-3xl shadow-sm border border-orange-50 space-y-4">
         <div className="flex bg-gray-50 p-1 rounded-2xl">
           {(['day', 'week', 'month'] as TimeView[]).map((v) => (
@@ -141,7 +148,7 @@ const History: React.FC<Props> = ({ records, onDelete }) => {
                   <p className="text-xs text-gray-500 truncate">{record.brand} · {record.cupSize || '标杯'} · {record.sugarLevel} · {record.iceLevel}</p>
                   <div className="flex items-center gap-3 mt-1 text-[10px] font-medium">
                     <span className="text-orange-400 flex items-center gap-0.5">
-                      <Clock size={10} /> {formatRecordDate(record.date)}
+                      <Clock size={10} /> {formatRecordTime(record.date)}
                     </span>
                     <span className="flex items-center gap-0.5 text-blue-400">
                       <Droplets size={10} /> {record.volume}ml
@@ -187,7 +194,6 @@ const History: React.FC<Props> = ({ records, onDelete }) => {
         )}
       </div>
 
-      {/* 分享模态框 */}
       {selectedShareRecord && (
         <ShareModal 
           record={selectedShareRecord} 

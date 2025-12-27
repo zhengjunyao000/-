@@ -19,7 +19,10 @@ const App: React.FC = () => {
   }, []);
 
   const stats: SummaryStats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    // 修复：使用本地日期格式 YYYY-MM-DD
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
     const todayRecords = records.filter(r => r.date.startsWith(today));
     
     const brandsCount: Record<string, number> = {};
@@ -55,7 +58,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fcf8f1] text-[#2C1810]">
-      {/* Main Content Area with padding for FAB and Nav */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 md:p-6 pb-40 pt-safe">
         <Routes>
           <Route path="/" element={<Dashboard stats={stats} records={records} />} />
@@ -64,7 +67,7 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      {/* Floating Add Button - Precise Mobile Positioning */}
+      {/* Floating Add Button */}
       <div className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50">
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -75,7 +78,7 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {/* Navigation Bar - 1:1:1 with Bottom Safe Area Padding */}
+      {/* Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-orange-50 px-2 pt-2 pb-[env(safe-area-inset-bottom)] grid grid-cols-3 items-center shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] z-[45]">
         <NavButton 
           active={location.pathname === '/'} 

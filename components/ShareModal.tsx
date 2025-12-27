@@ -15,14 +15,19 @@ const ShareModal: React.FC<Props> = ({ record, onClose }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // 引用 DOM 元素用于截图
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 初始化评价
+  // 初始化默认评价
   useEffect(() => {
     setComment("生活苦短，奶茶加满！🥤");
   }, []);
 
+  /**
+   * 调用 AI 服务生成简短评语
+   */
   const generateAIComment = async () => {
     setIsGenerating(true);
     const aiComment = await getDrinkQuickComment(record);
@@ -30,6 +35,9 @@ const ShareModal: React.FC<Props> = ({ record, onClose }) => {
     setIsGenerating(false);
   };
 
+  /**
+   * 处理封面图片上传并转换为 Base64
+   */
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -48,18 +56,22 @@ const ShareModal: React.FC<Props> = ({ record, onClose }) => {
     }
   };
 
+  /**
+   * 将 HTML 元素渲染为 PNG 图片并触发下载
+   */
   const handleDownloadImage = async () => {
     if (!cardRef.current || isSaving) return;
     
     setIsSaving(true);
     try {
+      // 稍微延迟确保 DOM 状态最新
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 3,
+        pixelRatio: 3, // 高清导出
         style: {
-          borderRadius: '0',
+          borderRadius: '0', // 导出时移除圆角，防止某些环境裁剪异常
         },
         backgroundColor: '#ffffff'
       });
@@ -94,6 +106,7 @@ const ShareModal: React.FC<Props> = ({ record, onClose }) => {
         {/* 左侧：卡片展示区 */}
         <div className="w-full md:w-3/5 bg-[#fefaf4] p-6 sm:p-10 flex items-center justify-center overflow-y-auto">
           <div className="w-full max-w-sm">
+            {/* 这个 div 是截图的目标区域 */}
             <div 
               ref={cardRef}
               className="w-full aspect-[3/4.2] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden relative flex flex-col border border-orange-100/30"

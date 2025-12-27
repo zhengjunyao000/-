@@ -2,9 +2,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { DrinkRecord } from "../types";
 
+/**
+ * 获取 AI 健康与消费洞察
+ * @param records 用户的历史饮用记录
+ */
 export const getAIInsights = async (records: DrinkRecord[]): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
+  // 只提取关键字段减少 Token 消耗
   const simplifiedRecords = records.slice(0, 20).map(r => ({
     name: r.name,
     brand: r.brand,
@@ -31,7 +36,7 @@ export const getAIInsights = async (records: DrinkRecord[]): Promise<string> => 
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
-        temperature: 0.7,
+        temperature: 0.7, // 适度的创意
         topP: 0.8,
       }
     });
@@ -42,6 +47,9 @@ export const getAIInsights = async (records: DrinkRecord[]): Promise<string> => 
   }
 };
 
+/**
+ * 为单次饮用记录生成个性化评价（用于分享卡片）
+ */
 export const getDrinkQuickComment = async (record: DrinkRecord): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
@@ -61,7 +69,7 @@ export const getDrinkQuickComment = async (record: DrinkRecord): Promise<string>
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
-        temperature: 0.8,
+        temperature: 0.8, // 较高的随机性以生成更有趣的句子
         topP: 0.9,
       }
     });
